@@ -1,3 +1,44 @@
 <template>
-    
+    <h1>My CV </h1>
+    <p class="title">Name : </p>
+    <p>{name}</p>
+    <p class="title">Professional Summary : </p>
+    <p>{professional_summary}</p>
+    <p class="title">Technical Skill : </p>
+    <ul>
+        <template for:each={technical_skills} for:item="skill">
+            <li key={skill}>
+                {skill}
+            </li>
+        </template>
+    </ul>
+    <p class="title">Proffesional Experience : </p>
+    <template for:each={experiences} for:item="job">
+        <div key={job.id}>
+            <div>
+                <p>{job.title}p at {job.company}</p>
+            </div>
+            <p>{job.date} | {job.location}</p>
+            <p>{job.description}</p>
+        </div>
+    </template>
+    <p class="title">Education : </p>
+    <p>{education}</p>
+    <p class="title">Certifications And Awards :</p>
+    <ul>
+        <template for:each={certifications} for:item="certification">
+            <li key={certification}>
+                {certification}
+            </li>
+        </template>
+    </ul>
+    <p class="title">Languages : </p>
+    <ul>
+        <template for:each={languages} for:item="language">
+            <li key={language}>
+                {language}
+            </li>
+        </template>
+    </ul>
+
 </template>

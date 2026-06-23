@@ -1,0 +1,16 @@
+h1{
+    background-color: rgb(97, 166, 225);
+    text-align: center;
+    font-size: larger;
+    font-weight: bolder;
+}
+p{
+    background-color: rgb(234, 243, 255);
+    text-align: center;
+}
+.title{
+    font-weight: bold;
+}
+ul{
+    text-align: center;
+}

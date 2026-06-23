@@ -1,44 +1,59 @@
 <template>
-    <h1>My CV </h1>
-    <p class="title">Name : </p>
-    <p>{name}</p>
-    <p class="title">Professional Summary : </p>
-    <p>{professional_summary}</p>
-    <p class="title">Technical Skill : </p>
-    <ul>
-        <template for:each={technical_skills} for:item="skill">
-            <li key={skill}>
-                {skill}
-            </li>
-        </template>
-    </ul>
-    <p class="title">Proffesional Experience : </p>
-    <template for:each={experiences} for:item="job">
-        <div key={job.id}>
-            <div>
-                <p>{job.title}p at {job.company}</p>
-            </div>
-            <p>{job.date} | {job.location}</p>
-            <p>{job.description}</p>
-        </div>
-    </template>
-    <p class="title">Education : </p>
-    <p>{education}</p>
-    <p class="title">Certifications And Awards :</p>
-    <ul>
-        <template for:each={certifications} for:item="certification">
-            <li key={certification}>
-                {certification}
-            </li>
-        </template>
-    </ul>
-    <p class="title">Languages : </p>
-    <ul>
-        <template for:each={languages} for:item="language">
-            <li key={language}>
-                {language}
-            </li>
-        </template>
-    </ul>
+    <h1>{name} CV </h1>
+    <lightning-accordion allow-multiple-sections-open>
+        <lightning-accordion-section name="prof" label="Professional Summary">
+            <p>{professional_summary}</p>
+        </lightning-accordion-section>
 
+        <lightning-accordion-section name="tech" label="Technical Skill">
+            <ul>
+                <template for:each={technical_skills} for:item="skill">
+                    <li key={skill}>
+                        {skill}
+                    </li>
+                </template>
+            </ul>
+        </lightning-accordion-section>
+
+        <lightning-accordion-section name ="profex" label="Proffesional Experience">
+            <lightning-accordion allow-multiple-sections-open>
+                <template for:each={experiences} for:item="job">
+                    <lightning-accordion-section key={job.id}  name={job.id} label={job.title}>
+                        <div>
+                            <p><strong>Company:</strong> {job.company}</p>
+                            <p><em>{job.date} | {job.location}</em></p>
+                            <p>{job.description}</p>
+                        </div>
+                    </lightning-accordion-section>
+                </template>
+            </lightning-accordion>
+        </lightning-accordion-section>
+
+        <lightning-accordion-section name="edu" label="Education">
+            <p>{education}</p>
+        </lightning-accordion-section>
+
+
+        <lightning-accordion-section name="cert" label="Certifications And Awards">
+            <ul>
+                <template for:each={certifications} for:item="certification">
+                    <li key={certification}>
+                        {certification}
+                    </li>
+                </template>
+            </ul>
+        </lightning-accordion-section>
+
+        <lightning-accordion-section name="lang" label="Languages">
+            <ul>
+                <template for:each={languages} for:item="language">
+                    <li key={language}>
+                        {language}
+                    </li>
+                </template>
+            </ul>
+        </lightning-accordion-section>
+
+
+    </lightning-accordion>
 </template>

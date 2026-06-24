@@ -1,0 +1,11 @@
+<template>
+    <lightning-card title="Account Fetcher" icon-name="standard:account">
+            <lightning-input type="number" label="Number of Accounts to Fetch" value={maxRecords} onchange={handleInputChange}>
+            </lightning-input>
+        <template if:true={accounts.data}>
+                <template for:each={accounts.data} for:item="acc">
+                    <p key={acc.Id}>{acc.Name}</p>
+                </template>
+        </template>
+    </lightning-card>
+</template>

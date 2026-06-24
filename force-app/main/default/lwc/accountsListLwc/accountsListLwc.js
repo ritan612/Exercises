@@ -10,6 +10,6 @@ export default class AccountsListLwc extends LightningElement {
 
     handleInputChange(event) {
         const value = event.target.value;
-        this.maxRecords = value ? parseInt(value, 10) : 0; 
+        this.maxRecords = value ; 
     }
 }

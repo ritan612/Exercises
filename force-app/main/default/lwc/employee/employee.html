@@ -1,0 +1,32 @@
+<template>
+    <lightning-card>
+
+        <lightning-input label="Employee Name" name="empName" value={empName} onchange={handleInputChange}></lightning-input>
+
+        <lightning-input label="Age" type="number" name="empAge" value={empAge} onchange={handleInputChange}></lightning-input>
+
+        <lightning-input label="Email" type="email" name="empEmail" value={empEmail} onchange={handleInputChange}></lightning-input>
+
+        <lightning-button label="Add Employee" variant="brand" onclick={handleAddEmployee}></lightning-button>
+
+        <h3>List Of The Employees</h3>
+        
+            
+        <template if:true={employees.length}>
+            <ul>
+                <template for:each={employees} for:item="emp">
+                    <li key={emp.id}>
+                        <p>Name: {emp.name} , Age: {emp.age} , Email: {emp.email}</p>
+                        <button type="button" onclick={handleDelete} data-id={emp.id} style="margin-left: 10px;">Delete</button>
+                    </li>
+                </template>
+            </ul>
+        </template>
+            
+        <template if:false={employees.length}>
+            <p>No Employees</p>
+        </template>
+
+    </lightning-card>
+
+</template>

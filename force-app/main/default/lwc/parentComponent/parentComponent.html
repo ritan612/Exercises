@@ -1,0 +1,6 @@
+<template>
+    <lightning-card title="Parent">
+        <lightning-input label="Greeting" type="text" name="greetparent" value={greetparent} onchange={changegreeting}></lightning-input>
+        <c-child-component greeting={greetparent} ></c-child-component>
+    </lightning-card>
+</template>

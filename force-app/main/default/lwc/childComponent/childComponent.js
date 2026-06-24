@@ -1,5 +1,9 @@
-import { LightningElement ,api} from 'lwc';
+import { LightningElement} from 'lwc';
 
 export default class ChildComponent extends LightningElement {
-    @api greeting;
+    
+    sendText() {
+        const myEvent = new CustomEvent('message', {detail: 'Hello Child'});
+        this.dispatchEvent(myEvent);
+    }
 }

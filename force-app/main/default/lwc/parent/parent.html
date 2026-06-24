@@ -1,0 +1,11 @@
+<template>
+    <div>
+        <h2>Parent</h2>
+        <p>Child One: {childOneStatus}</p>
+        <p>Child Two: {childTwoStatus}</p>
+    </div>
+    <div>
+        <c-child label="child one" onsample = {handleChild}></c-child>
+        <c-child label="child two" onsample = {handleChild}></c-child>
+    </div>
+</template>

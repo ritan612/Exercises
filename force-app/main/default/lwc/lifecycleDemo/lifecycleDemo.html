@@ -1,0 +1,8 @@
+<template>
+    <lightning-button variant="brand" onclick={increment} label="Increment Counter"></lightning-button>
+    <p>{counter}</p>
+    <lightning-button variant="brand" onclick={showHide} label="Show/Hide Message"></lightning-button>
+    <template if:true={show}>
+        <p>Hello LWC!</p>
+    </template>
+</template>

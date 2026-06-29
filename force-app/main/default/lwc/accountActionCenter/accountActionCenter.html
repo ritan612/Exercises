@@ -1,62 +1,59 @@
 <template>
-    <lightning-card title="ApexImperativeMethod" icon-name="custom:custom63">
-
-        <lightning-button label="Recent Accounts" onclick={handleLoadRecentAccounts}></lightning-button>
-        <lightning-button label="Hot Accounts" onclick={handleLoadHotAccounts}></lightning-button>
-        <lightning-button label="Accounts Without Phone" onclick={handleLoadAccountsWithoutPhone}></lightning-button>
+    <lightning-card title="Account Action Center" icon-name="custom:custom63">
+        
+        <div class="slds-m-around_medium">
+            <lightning-button label="Recent Accounts" onclick={handleLoadRecentAccounts} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button label="Hot Accounts" onclick={handleLoadHotAccounts} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button label="Accounts Without Phone" onclick={handleLoadAccountsWithoutPhone}></lightning-button>
+        </div>
 
         <template lwc:if={accounts}>
-
-            <template for:each={accounts} for:item="account">
-                <lightning-card title={account.Name} key={account.Id}>
-                    <lightning-button 
-                    onclick={handleSelectAccount} 
-                    data-id={account.Id} 
-                    label="Select" 
-                    variant="brand">
-                </lightning-button>
-            </lightning-card>
+            <div class="slds-m-around_medium">
+                <template for:each={accounts} for:item="account">
+                    <lightning-card title={account.Name} key={account.Id} class="slds-m-bottom_small slds-block">
+                        <div class="slds-p-horizontal_small">
+                            <lightning-button onclick={handleSelectAccount} data-id={account.Id} label="Select" variant="brand"></lightning-button>
+                        </div>
+                    </lightning-card>
+                </template>
+            </div>
         </template>
 
-
         <template lwc:if={isDetailsVisible}>
+            <div class="slds-m-around_medium">
+                <lightning-card title={accountDetailsHeader} icon-name="standard:account">
+                    
+                    <div slot="actions">
+                        <lightning-button label="Go To Account Page" onclick={navigateToAccount} variant="neutral"></lightning-button>
+                    </div>
 
-            <lightning-card title="Account Details" icon-name="standard:account">
-                <template lwc:if={isEditingDescription}>
-                    <lightning-record-edit-form 
-                    record-id={selectedAccountId} 
-                    object-api-name="Account"
-                    onsuccess={handleSuccess}>
-                    <lightning-messages></lightning-messages>
+                    <div class="slds-p-horizontal_medium">
+                        <template lwc:if={isEditingDescription}>
+                            <lightning-record-edit-form record-id={selectedAccountId} object-api-name="Account" onsuccess={handleSuccess}>
+                                <lightning-messages></lightning-messages>
+                                <lightning-input-field field-name="Description"></lightning-input-field>
+                                <div class="slds-m-top_medium">
+                                    <lightning-button type="submit" label="Save Description" variant="success"></lightning-button>
+                                    <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-left_x-small"></lightning-button>
+                                </div>
+                            </lightning-record-edit-form>
+                        </template>
 
-                    <lightning-input-field field-name="Description"></lightning-input-field>
+                        <template lwc:else>
+                            <lightning-record-view-form record-id={selectedAccountId} object-api-name="Account">
+                                <lightning-output-field field-name="Name"></lightning-output-field>
+                                <lightning-output-field field-name="Phone"></lightning-output-field>
+                                <lightning-output-field field-name="Description"></lightning-output-field>
+                                <div class="slds-m-top_small">
+                                    <lightning-button label="Edit Description" icon-name="utility:edit" onclick={handleEnableEdit}></lightning-button>
+                                </div>
+                            </lightning-record-view-form>
+                        </template>
+                    </div>
 
-                    <lightning-button type="submit" label="Save" variant="success"></lightning-button>
-                    <lightning-button label="Cancel" onclick={handleCancelEdit}></lightning-button>
-                </lightning-record-edit-form>
-            </template>
+                </lightning-card>
+            </div>
+        </template>
 
-            <template lwc:else>
-                <lightning-record-view-form 
-                record-id={selectedAccountId} 
-                object-api-name="Account">
-
-                <lightning-output-field field-name="Name"></lightning-output-field>
-                <lightning-output-field field-name="Phone"></lightning-output-field>
-
-                <lightning-output-field field-name="Description"></lightning-output-field>
-                <lightning-button-icon 
-                icon-name="utility:edit" 
-                alternative-text="Edit Description" 
-                title="Edit Description"
-                onclick={handleEnableEdit}>
-            </lightning-button-icon>
-
-        </lightning-record-view-form>
-    </template>
-
-</lightning-card>
-</template>
-</template>
-</lightning-card>
+    </lightning-card>
 </template>

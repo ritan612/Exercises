@@ -1,0 +1,62 @@
+<template>
+    <lightning-card title="ApexImperativeMethod" icon-name="custom:custom63">
+        
+        <lightning-button label="Recent Accounts" onclick={handleLoadRecentAccounts}></lightning-button>
+        <lightning-button label="Hot Accounts" onclick={handleLoadHotAccounts}></lightning-button>
+        <lightning-button label="Accounts Without Phone" onclick={handleLoadAccountsWithoutPhone}></lightning-button>
+        
+        <template lwc:if={accounts}>
+            
+            <template for:each={accounts} for:item="account">
+                <lightning-card title={account.Name} key={account.Id}>
+                    <lightning-button 
+                    onclick={handleSelectAccount} 
+                    data-id={account.Id} 
+                    label="Select" 
+                    variant="brand">
+                </lightning-button>
+            </lightning-card>
+        </template>
+        
+        
+        <template lwc:if={isDetailsVisible}>
+            
+            <lightning-card title="Account Details" icon-name="standard:account">
+                <template lwc:if={isEditingDescription}>
+                    <lightning-record-edit-form 
+                    record-id={selectedAccountId} 
+                    object-api-name="Account"
+                    onsuccess={handleSuccess}>
+                    <lightning-messages></lightning-messages>
+                    
+                    <lightning-input-field field-name="Description"></lightning-input-field>
+                    
+                    <lightning-button type="submit" label="Save" variant="success"></lightning-button>
+                    <lightning-button label="Cancel" onclick={handleCancelEdit}></lightning-button>
+                </lightning-record-edit-form>
+            </template>
+            
+            <template lwc:else>
+                <lightning-record-view-form 
+                record-id={selectedAccountId} 
+                object-api-name="Account">
+                
+                <lightning-output-field field-name="Name"></lightning-output-field>
+                <lightning-output-field field-name="Phone"></lightning-output-field>
+                
+                <lightning-output-field field-name="Description"></lightning-output-field>
+                <lightning-button-icon 
+                icon-name="utility:edit" 
+                alternative-text="Edit Description" 
+                title="Edit Description"
+                onclick={handleEnableEdit}>
+            </lightning-button-icon>
+            
+        </lightning-record-view-form>
+    </template>
+    
+</lightning-card>
+</template>
+</template>
+</lightning-card>
+</template>

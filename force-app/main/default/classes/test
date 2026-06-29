@@ -1,0 +1,125 @@
+import { LightningElement } from 'lwc';
+import getRecentAccount from '@salesforce/apex/AccountImperativeCallController.getRecentAccount';
+import getHotAccount from '@salesforce/apex/AccountImperativeCallController.getHotAccount';
+import getAccountWithoutPhone from '@salesforce/apex/AccountImperativeCallController.getAccountWithoutPhone';
+
+export default class AccountActionCenter extends LightningElement {
+    accounts;
+    error;
+    
+    selectedAccountId; // Holds the ID of the currently selected account
+    isDetailsVisible = false; // Controls the visibility of the details box
+
+    async handleLoadRecentAccounts() {
+        try {
+            this.accounts = await getRecentAccount();
+            this.error = undefined;
+            this.isDetailsVisible = false; // Hide details on new list load
+        } catch (error) {
+            this.accounts = undefined;
+            this.error = error;
+        }
+    }
+
+    async handleLoadHotAccounts() {
+        try {
+            this.accounts = await getHotAccount();
+            this.error = undefined;
+            this.isDetailsVisible = false;
+        } catch (error) {
+            this.accounts = undefined;
+            this.error = error;
+        }
+    }
+
+    async handleLoadAccountsWithoutPhone() {
+        try {
+            this.accounts = await getAccountWithoutPhone();
+            this.error = undefined;
+            this.isDetailsVisible = false;
+        } catch (error) {
+            this.accounts = undefined;
+            this.error = error;
+        }
+    }
+
+    // Capture the clicked account ID and show the details box
+    handleSelectAccount(event) {
+        this.selectedAccountId = event.target.dataset.id;
+        this.isDetailsVisible = true;
+    }
+
+    // Refreshes the list and closes the details box after a successful update
+    handleSuccess() {
+        this.isDetailsVisible = false;
+        // Optionally, reload the current list so the updated data reflects in the list
+    }
+}
+
+
+
+<template>
+  <lightning-card title="ApexImperativeMethod" icon-name="custom:custom63">
+    <div class="slds-m-around_medium">
+      <p class="slds-m-bottom_small">
+        <lightning-button label="Recent Accounts" onclick={handleLoadRecentAccounts}></lightning-button>
+        <lightning-button label="Hot Accounts" onclick={handleLoadHotAccounts}></lightning-button>
+        <lightning-button label="Accounts Without Phone" onclick={handleLoadAccountsWithoutPhone}></lightning-button>        
+      </p>
+
+      <!-- Account List Section -->
+      <template lwc:if={accounts}>
+        <div class="slds-grid slds-gutters">
+          <div class="slds-col slds-size_1-of-2">
+            <template for:each={accounts} for:item="account">
+              <lightning-card title={account.Name} key={account.Id} class="slds-m-bottom_x-small">
+                <div class="slds-var-m-around_medium">
+                  <p><strong>Industry:</strong> {account.Industry}</p>
+                  <p><strong>Phone:</strong> {account.Phone}</p>
+                  <!-- Pass the Account Id into data-id -->
+                  <lightning-button 
+                    onclick={handleSelectAccount} 
+                    data-id={account.Id} 
+                    label="Select" 
+                    variant="brand" 
+                    class="slds-m-top_small">
+                  </lightning-button>
+                </div>
+              </lightning-card>
+            </template>
+          </div>
+
+          <!-- Account Details and Edit Section -->
+          <div class="slds-col slds-size_1-of-2">
+            <template lwc:if={isDetailsVisible}>
+              <lightning-card title="Account Details" icon-name="standard:account">
+                <div class="slds-var-m-around_medium">
+                  
+                  <!-- Form to update a single field -->
+                  <lightning-record-edit-form 
+                    record-id={selectedAccountId} 
+                    object-api-name="Account"
+                    onsuccess={handleSuccess}>
+                    <lightning-messages></lightning-messages>
+                    
+                    <!-- Replace 'Phone' with any field API name you want to update -->
+                    <lightning-input-field field-name="Phone"></lightning-input-field>
+                    
+                    <div class="slds-m-top_medium">
+                      <lightning-button 
+                        type="submit" 
+                        label="Update Field" 
+                        variant="success">
+                      </lightning-button>
+                    </div>
+                  </lightning-record-edit-form>
+
+                </div>
+              </lightning-card>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </lightning-card>
+</template>

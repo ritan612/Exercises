@@ -1,0 +1,54 @@
+<template>
+    <div class="cv-container">
+        <h1>{name} CV</h1>
+        <h2> 76 558 767 | Sabtieh | ritanassar2004@gmail.com</h2>
+        
+        <lightning-accordion allow-multiple-sections-open>
+            <lightning-accordion-section name="prof" label="Professional Summary">
+                <p class="section-content">{professional_summary}</p>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="tech" label="Technical Skills">
+                <ul class="bullet-list">
+                    <template for:each={technical_skills} for:item="skill">
+                        <li key={skill}>{skill}</li>
+                    </template>
+                </ul>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="profex" label="Professional Experience">
+                <lightning-accordion allow-multiple-sections-open>
+                    <template for:each={experiences} for:item="job">
+                        <lightning-accordion-section key={job.id} name={job.id} label={job.title}>
+                            <div class="job-details">
+                                <p><strong>Company:</strong> {job.company}</p>
+                                <p class="job-meta"><em>{job.date} | {job.location}</em></p>
+                                <p class="job-description">{job.description}</p>
+                            </div>
+                        </lightning-accordion-section>
+                    </template>
+                </lightning-accordion>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="edu" label="Education">
+                <p class="section-content">{education}</p>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="cert" label="Certifications And Awards">
+                <ul class="bullet-list">
+                    <template for:each={certifications} for:item="certification">
+                        <li key={certification}>{certification}</li>
+                    </template>
+                </ul>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="lang" label="Languages">
+                <ul class="bullet-list">
+                    <template for:each={languages} for:item="language">
+                        <li key={language}>{language}</li>
+                    </template>
+                </ul>
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </div>
+</template>

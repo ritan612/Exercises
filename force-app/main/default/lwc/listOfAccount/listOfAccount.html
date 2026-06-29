@@ -1,0 +1,16 @@
+<template>
+    <lightning-card>
+        <lightning-combobox
+            label="Choose a rating"
+            value={rating}
+            options={ratingoptions}
+            onchange={handleChange} ></lightning-combobox>
+    
+
+    <template for:each={FilteredAccount} for:item="account">
+        <div key={account.Id}>
+            {account.Name}, {account.Rating}, {account.Industry}, {account.Phone}
+        </div>
+    </template>
+    </lightning-card>
+</template>

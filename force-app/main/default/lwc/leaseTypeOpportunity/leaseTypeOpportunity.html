@@ -37,7 +37,7 @@
                             </template>
             </template>
             
-            <div class="slds-var-m-top_medium">
+            <div>
                 <lightning-button type="submit" variant="brand" label="Create Quote"></lightning-button>
             </div>
             
@@ -45,7 +45,7 @@
     </template>
     
     <template lwc:else>
-        <div class="slds-notify slds-notify_alert slds-theme_warning" role="alert">
+        <div role="alert">
             <h2>Quotes can only be created when the Opportunity Stage is 'New'.</h2>
         </div>
     </template>

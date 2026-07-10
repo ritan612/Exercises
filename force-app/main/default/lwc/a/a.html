@@ -1,0 +1,12 @@
+<template>
+    <lightning-card title="Component A" icon-name="standard:account">
+        <div class="slds-m-around_medium">
+            <lightning-record-picker 
+                label="Select Account" 
+                object-api-name="Account">
+            </lightning-record-picker>
+            
+            <lightning-button label="Send Message" onclick={handleButtonClicked}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

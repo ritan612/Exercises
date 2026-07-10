@@ -1,0 +1,23 @@
+<template>
+    <lightning-card title="Component B - Opportunities" icon-name="standard:opportunity">
+        <div class="slds-m-around_medium">
+            
+            <!-- 1. Display list if Opportunities exist -->
+            <template if:true={oppList.length}>
+                <ul class="slds-list_dotted">
+                    <template for:each={oppList} for:item="opp">
+                        <li key={opp.Id} class="slds-m-bottom_small">
+                            <strong>{opp.Name}</strong> - {opp.StageName} (${opp.Amount})
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- 2. Display alternative text if no records are found -->
+            <template if:false={oppList.length}>
+                <p>No opportunities to display. Please select an account in Component A and click Send.</p>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

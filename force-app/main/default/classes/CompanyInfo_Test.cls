@@ -26,7 +26,7 @@ private class CompanyInfo_Test {
         System.assertEquals('United States', updatedLead.Country);
         System.assertEquals('1600 Amphitheatre Parkway', updatedLead.Street);
         System.assertEquals('Mountain View', updatedLead.City);
-        System.assertEquals('CA', updatedLead.StateCode);
+        System.assertEquals('CA', updatedLead.State);
         System.assertEquals('94043', updatedLead.PostalCode);
         
     }

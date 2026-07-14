@@ -148,7 +148,7 @@ public with sharing class CompanyInfo {
                                     myLead.City = String.valueOf(addressMap.get('city'));
                                 }
                                 if (addressMap.get('state') != null) {
-                                    myLead.StateCode = String.valueOf(addressMap.get('state'));
+                                    myLead.State = String.valueOf(addressMap.get('state'));
                                 }
                                 if (addressMap.get('postalCode') != null) {
                                     myLead.PostalCode = String.valueOf(addressMap.get('postalCode'));

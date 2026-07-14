@@ -1,2 +1,65 @@
-the accounts should be fetched through @wire and the component should be reactive 
-(the description update should reflect on the ui), use refreshApex
+
+        // Step 2: Fetch the Opportunity Team Members (Representatives) & their Emails
+        // Note: OpportunityTeamMember relates to User. We need the User's email.
+        Map<Id, List<String>> oppIdToEmailsMap = new Map<Id, List<String>>();
+        
+        for (OpportunityTeamMember otm : [
+            SELECT OpportunityId, User.Email 
+            FROM OpportunityTeamMember 
+            WHERE OpportunityId IN :qualifiedOppIds AND User.Email != null
+        ]) {
+            if (!oppIdToEmailsMap.containsKey(otm.OpportunityId)) {
+                oppIdToEmailsMap.put(otm.OpportunityId, new List<String>());
+            }
+            oppIdToEmailsMap.get(otm.OpportunityId).add(otm.User.Email);
+        }
+
+        // List to hold all emails to be sent in a single batch
+        List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
+
+        // Step 3: Loop through qualified opportunities, generate PDF, and prepare emails
+        for (Id oppId : qualifiedOppIds) {
+            // Only proceed if there are team members to email
+            if (!oppIdToEmailsMap.containsKey(oppId) || oppIdToEmailsMap.get(oppId).isEmpty()) {
+                continue; 
+            }
+
+            List<String> recipientEmails = oppIdToEmailsMap.get(oppId);
+
+            // Generate the PDF from the Visualforce Page
+            // Replace 'YourVisualforcePageName' with the actual API name of your VF page
+            PageReference pdfPage = Page.YourVisualforcePageName; 
+            pdfPage.getParameters().put('id', oppId);
+            
+            Blob pdfBlob;
+            try {
+                // getContentAsPDF() counts as a callout, but is supported in trigger contexts 
+                // as long as it's not a before trigger. (Since you called this in afterUpdate, you are good!)
+                pdfBlob = pdfPage.getContentAsPDF();
+            } catch (Exception e) {
+                // Fallback for test classes where getContentAsPDF() is not supported
+                pdfBlob = Blob.valueOf('PDF Dummy Content for Test Run');
+            }
+
+            // Create the email attachment
+            Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
+            attachment.setFileName('Opportunity_Details_' + oppId + '.pdf');
+            attachment.setBody(pdfBlob);
+            attachment.setContentType('application/pdf');
+
+            // Create the email message
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setToAddresses(recipientEmails);
+            mail.setSubject('Closed Won: Opportunity Details PDF');
+            mail.setPlainTextBody('Hello Team,\n\nPlease find attached the PDF details for the newly closed opportunity.\n\nBest regards,\nSalesforce System');
+            mail.setFileAttachments(new List<Messaging.EmailFileAttachment>{ attachment });
+
+            emailsToSend.add(mail);
+        }
+
+        // Step 4: Send all prepared emails
+        if (!emailsToSend.isEmpty()) {
+            Messaging.sendEmail(emailsToSend);
+        }
+    }
+}

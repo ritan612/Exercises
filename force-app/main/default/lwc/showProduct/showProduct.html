@@ -1,0 +1,92 @@
+<template>
+    <lightning-card title="Product Action Center" icon-name="custom:custom63">
+        
+        <div class="slds-grid slds-gutters slds-m-around_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    name="typeFilter"
+                    label="Product Type"
+                    value={currentFilter}
+                    placeholder="Select Type"
+                    options={typeOptions}
+                    onchange={handleTypeChange}>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    name="countryFilter"
+                    label="Country of Origin"
+                    value={selectedCountry}
+                    placeholder="Select Country"
+                    options={countryOptions}
+                    onchange={handleCountryChange}>
+                </lightning-combobox>
+            </div>
+        </div>
+
+    <div class="slds-box slds-theme_default slds-m-around_medium">
+        <table class="slds-table slds-table_bordered slds-table_fixed-layout" role="grid" aria-label="Products Table">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <th class="slds-text-align_right" role="cell" style="width: 3.25rem;"></th>
+                    <th scope="col" class="slds-is-resizable">
+                        <span class="slds-truncate" title="Product Name">Product Name</span>
+                    </th>
+                    <th scope="col" class="slds-is-resizable">
+                        <span class="slds-truncate" title="Quantity">Quantity</span>
+                    </th>
+                    <th scope="col" class="slds-is-resizable">
+                        <span class="slds-truncate" title="Amount">Amount</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <template for:each={formattedProducts} for:item="prod">
+                    <tr key={prod.id} class="slds-hint-parent">
+                        <td class="slds-text-align_right" role="gridcell">
+                            <div class="slds-checkbox">
+                                <input type="checkbox" 
+                                       name="options" 
+                                       id={prod.id} 
+                                       value={prod.id} 
+                                       data-id={prod.id} 
+                                       onchange={handleRowSelection} 
+                                       tabindex="-1" />
+                                <label class="slds-checkbox__label" for={prod.id}>
+                                    <span class="slds-checkbox_faux"></span>
+                                    <span class="slds-form-element__label slds-assistive-text">Select item</span>
+                                </label>
+                            </div>
+                        </td>
+                        <th scope="row" tabindex="0">
+                            <div class="slds-truncate" title={prod.name}>
+                                <a href={prod.id} data-id={prod.id} onclick={handleShowDetails}>
+                                    {prod.name}
+                                </a>
+                            </div>
+                        </th>
+                        <td role="gridcell">
+                            <div class="slds-truncate" title={prod.quantity}>{prod.quantity}</div>
+                        </td>
+                        <td role="gridcell">
+                            <div class="slds-truncate" title={prod.amount}>
+                                <lightning-formatted-number 
+                                    value={prod.amount} 
+                                    format-style="currency" 
+                                    currency-code="USD">
+                                </lightning-formatted-number>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    <div class="slds-align_absolute-center slds-m-top_medium">
+            <lightning-button label="Previous" onclick={handlePrevious} disabled={isPreviousDisabled}></lightning-button>
+            <span class="slds-m-horizontal_medium">Page {currentPage} of {totalPages}</span>
+            <lightning-button label="Next" onclick={handleNext} disabled={isNextDisabled}></lightning-button>
+        </div>
+
+    </lightning-card>
+</template>

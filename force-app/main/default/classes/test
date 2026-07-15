@@ -1,65 +1,324 @@
+import { LightningElement, wire, api } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
+import { refreshApex } from '@salesforce/apex';
 
-        // Step 2: Fetch the Opportunity Team Members (Representatives) & their Emails
-        // Note: OpportunityTeamMember relates to User. We need the User's email.
-        Map<Id, List<String>> oppIdToEmailsMap = new Map<Id, List<String>>();
-        
-        for (OpportunityTeamMember otm : [
-            SELECT OpportunityId, User.Email 
-            FROM OpportunityTeamMember 
-            WHERE OpportunityId IN :qualifiedOppIds AND User.Email != null
-        ]) {
-            if (!oppIdToEmailsMap.containsKey(otm.OpportunityId)) {
-                oppIdToEmailsMap.put(otm.OpportunityId, new List<String>());
-            }
-            oppIdToEmailsMap.get(otm.OpportunityId).add(otm.User.Email);
-        }
+// Import our updated Apex methods
+import getAllProduct from '@salesforce/apex/ProductServices.getAllProduct';
+import getGenerator from '@salesforce/apex/ProductServices.getGenerator';
+import getParts from '@salesforce/apex/ProductServices.getParts';
 
-        // List to hold all emails to be sent in a single batch
-        List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
+// Dynamic country picklist imports
+import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
+import PRODUCT_OBJECT from '@salesforce/schema/Product2';
+import COUNTRY_FIELD from '@salesforce/schema/Product2.Country_Of_Origin__c';
 
-        // Step 3: Loop through qualified opportunities, generate PDF, and prepare emails
-        for (Id oppId : qualifiedOppIds) {
-            // Only proceed if there are team members to email
-            if (!oppIdToEmailsMap.containsKey(oppId) || oppIdToEmailsMap.get(oppId).isEmpty()) {
-                continue; 
-            }
+export default class ShowProduct extends NavigationMixin(LightningElement) {
+    @api products; 
+    selectedProductId; // This will hold the Product2Id
+    selectedProductName = ''; 
+    isDetailsVisible = false;
+    isEditingDescription = false;
+    
+    // Active filters
+    currentFilter = 'All'; 
+    selectedCountry = 'All';
 
-            List<String> recipientEmails = oppIdToEmailsMap.get(oppId);
+    countryOptions = [];
 
-            // Generate the PDF from the Visualforce Page
-            // Replace 'YourVisualforcePageName' with the actual API name of your VF page
-            PageReference pdfPage = Page.YourVisualforcePageName; 
-            pdfPage.getParameters().put('id', oppId);
-            
-            Blob pdfBlob;
-            try {
-                // getContentAsPDF() counts as a callout, but is supported in trigger contexts 
-                // as long as it's not a before trigger. (Since you called this in afterUpdate, you are good!)
-                pdfBlob = pdfPage.getContentAsPDF();
-            } catch (Exception e) {
-                // Fallback for test classes where getContentAsPDF() is not supported
-                pdfBlob = Blob.valueOf('PDF Dummy Content for Test Run');
-            }
+    columns = [
+        { label: 'Product Name', fieldName: 'name', type: 'text' },
+        { label: 'Quantity', fieldName: 'quantity', type: 'number', cellAttributes: { alignment: 'left' } },
+        { label: 'Amount', fieldName: 'amount', type: 'currency', cellAttributes: { alignment: 'left' } }
+    ];
 
-            // Create the email attachment
-            Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
-            attachment.setFileName('Opportunity_Details_' + oppId + '.pdf');
-            attachment.setBody(pdfBlob);
-            attachment.setContentType('application/pdf');
+    get typeOptions() {
+        return [
+            { label: 'All', value: 'All' },
+            { label: 'Generator', value: 'Generator' },
+            { label: 'Parts', value: 'Parts' }
+        ];
+    }
 
-            // Create the email message
-            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(recipientEmails);
-            mail.setSubject('Closed Won: Opportunity Details PDF');
-            mail.setPlainTextBody('Hello Team,\n\nPlease find attached the PDF details for the newly closed opportunity.\n\nBest regards,\nSalesforce System');
-            mail.setFileAttachments(new List<Messaging.EmailFileAttachment>{ attachment });
+    // Dynamic Country Dropdown
+    @wire(getObjectInfo, { objectApiName: PRODUCT_OBJECT })
+    productMetadata;
 
-            emailsToSend.add(mail);
-        }
-
-        // Step 4: Send all prepared emails
-        if (!emailsToSend.isEmpty()) {
-            Messaging.sendEmail(emailsToSend);
+    @wire(getPicklistValues, { 
+        recordTypeId: '$productMetadata.data.defaultRecordTypeId', 
+        fieldApiName: COUNTRY_FIELD 
+    })
+    wiredPicklist({ error, data }) {
+        if (data) {
+            const dynamicOptions = data.values.map(picklist => ({
+                label: picklist.label,
+                value: picklist.value
+            }));
+            this.countryOptions = [{ label: 'All Countries', value: 'All' }, ...dynamicOptions];
         }
     }
+
+    // Three Apex Wire methods returning PricebookEntry lists
+    wiredAllResult;
+    wiredGeneratorResult;
+    wiredPartsResult;
+
+    @wire(getAllProduct)
+    wiredAll(result) {
+        this.wiredAllResult = result;
+    }
+
+    @wire(getGenerator)
+    wiredGenerator(result) {
+        this.wiredGeneratorResult = result;
+    }
+
+    @wire(getParts)
+    wiredParts(result) {
+        this.wiredPartsResult = result;
+    }
+
+    // Dropdown Handlers
+    handleTypeChange(event) {
+        this.currentFilter = event.detail.value;
+        this.resetDetails();
+    }
+
+    handleCountryChange(event) {
+        this.selectedCountry = event.detail.value;
+        this.resetDetails();
+    }
+
+    // Dynamic filtering & Mapping
+    // get formattedProducts() {
+    //     let activeData = [];
+
+    //     // 1. Select active price list
+    //     if (this.currentFilter === 'All' && this.wiredAllResult && this.wiredAllResult.data) {
+    //         activeData = this.wiredAllResult.data;
+    //     } else if (this.currentFilter === 'Generator' && this.wiredGeneratorResult && this.wiredGeneratorResult.data) {
+    //         activeData = this.wiredGeneratorResult.data;
+    //     } else if (this.currentFilter === 'Parts' && this.wiredPartsResult && this.wiredPartsResult.data) {
+    //         activeData = this.wiredPartsResult.data;
+    //     }
+
+        // 2. Map and parse relationship properties
+    //     return activeData
+    //         .map(pbe => {
+    //             return {
+    //                 id: pbe.Product2Id, // Navigate/Edit using the actual Product ID
+    //                 name: pbe.Product2 ? pbe.Product2.Name : '',
+    //                 quantity: 1, // Locked at 1
+    //                 amount: pbe.UnitPrice || 0, // Gotten dynamically from the B2C Pricebook!
+    //                 country: pbe.Product2 ? pbe.Product2.Country_Of_Origin__c : ''
+    //             };
+    //         })
+    //         .filter(prod => {
+    //             // 3. Keep filters working together
+    //             return this.selectedCountry === 'All' || prod.country === this.selectedCountry;
+    //         });
+    // }
+
+    // Checkbox and Row Selection
+    handleRowSelection(event) {
+        const selectedRows = event.detail.selectedRows;
+        if (selectedRows.length > 0) {
+            const lastSelectedRow = selectedRows[selectedRows.length - 1];
+            this.selectedProductId = lastSelectedRow.id; // Map back to Product2 ID
+            this.selectedProductName = lastSelectedRow.name;
+            this.isDetailsVisible = true;
+            this.isEditingDescription = false;
+        } else {
+            this.resetDetails();
+        }
+    }
+
+    get productDetailsHeader() {
+        return this.selectedProductName + ' Details';
+    }
+
+    navigateToProduct() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.selectedProductId,
+                objectApiName: 'Product2',
+                actionName: 'view'
+            }
+        });
+    }
+
+    handleEnableEdit() {
+        this.isEditingDescription = true;
+    }
+
+    handleCancelEdit() {
+        this.isEditingDescription = false;
+    }
+
+    handleSuccess() {
+        this.isEditingDescription = false;
+        // Refresh all wires to keep unit prices and product parameters current
+        refreshApex(this.wiredAllResult);
+        refreshApex(this.wiredGeneratorResult);
+        refreshApex(this.wiredPartsResult);
+    }
+
+    resetDetails() {
+        this.isDetailsVisible = false;
+        this.isEditingDescription = false;
+        this.selectedProductName = '';
+        this.selectedProductId = undefined;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public with sharing class ProductServices {
+    
+    @AuraEnabled(cacheable=true)
+    public static List<PricebookEntry> getAllProduct() {
+        return [
+            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
+            FROM PricebookEntry
+            WHERE Pricebook2.Name = 'B2C Pricebook' AND IsActive = true
+        ];
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<PricebookEntry> getGenerator() {
+        return [
+            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
+            FROM PricebookEntry
+            WHERE Pricebook2.Name = 'B2C Pricebook' 
+            AND Product2.RecordTypeId = '012g5000003E6i9AAC' 
+            AND IsActive = true
+        ];
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<PricebookEntry> getParts() {
+        return [
+            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
+            FROM PricebookEntry
+            WHERE Pricebook2.Name = 'B2C Pricebook' 
+            AND Product2.RecordTypeId = '012g5000003E6lNAAS' 
+            AND IsActive = true
+        ];
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+<template>
+    <lightning-card title="Product Action Center" icon-name="custom:custom63">
+        
+        <div class="slds-grid slds-gutters slds-m-around_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    name="typeFilter"
+                    label="Product Type"
+                    value={currentFilter}
+                    placeholder="Select Type"
+                    options={typeOptions}
+                    onchange={handleTypeChange}>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    name="countryFilter"
+                    label="Country of Origin"
+                    value={selectedCountry}
+                    placeholder="Select Country"
+                    options={countryOptions}
+                    onchange={handleCountryChange}>
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <lightning-card title="Selected Products" icon-name="standard:product">
+            <div class="slds-p-around_medium">
+                <template lwc:if={formattedProducts}>
+                    <lightning-datatable
+                        key-field="id"
+                        data={formattedProducts}
+                        columns={columns}
+                        onrowselection={handleRowSelection}>
+                    </lightning-datatable>
+                </template>
+            </div>
+        </lightning-card>
+
+        <template lwc:if={isDetailsVisible}>
+            <div class="slds-m-around_medium">
+                <lightning-card title={productDetailsHeader} icon-name="standard:account">
+                    
+                    <div slot="actions">
+                        <lightning-button label="Go To Product Page" onclick={navigateToProduct} variant="neutral"></lightning-button>
+                    </div>
+
+                    <div class="slds-p-horizontal_medium">
+                        <template lwc:if={isEditingDescription}>
+                            <lightning-record-edit-form record-id={selectedProductId} object-api-name="Product2" onsuccess={handleSuccess}>
+                                <lightning-messages></lightning-messages>
+                                <lightning-input-field field-name="Description"></lightning-input-field>
+                                <div class="slds-m-top_medium">
+                                    <lightning-button type="submit" label="Save Description" variant="success"></lightning-button>
+                                    <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-left_x-small"></lightning-button>
+                                </div>
+                            </lightning-record-edit-form>
+                        </template>
+
+                        <template lwc:else>
+                            <lightning-record-view-form record-id={selectedProductId} object-api-name="Product2">
+                                <lightning-output-field field-name="Name"></lightning-output-field>
+                                <lightning-output-field field-name="Description"></lightning-output-field>
+                                <div class="slds-m-top_small">
+                                    <lightning-button label="Edit Description" icon-name="utility:edit" onclick={handleEnableEdit}></lightning-button>
+                                </div>
+                            </lightning-record-view-form>
+                        </template>
+                    </div>
+
+                </lightning-card>
+            </div>
+        </template>
+
+    </lightning-card>
+</template>

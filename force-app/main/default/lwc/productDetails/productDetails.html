@@ -1,0 +1,12 @@
+<template>
+<template if:true={receivedProductId}>
+    <lightning-card title="Product Details" icon-name="standard:product">
+           
+                <lightning-record-view-form
+                    record-id={receivedProductId}
+                    object-api-name="Product2">
+                            <lightning-output-field field-name="Name"></lightning-output-field>
+                </lightning-record-view-form>
+    </lightning-card>
+</template>
+</template>

@@ -1,23 +1,10 @@
-import { LightningElement ,wire} from 'lwc';
-import { subscribe, MessageContext } from 'lightning/messageService';
-import COMPONENT_COMMUNICATION_CHANNEL from '@salesforce/messageChannel/messageChannelName__c';
+import { LightningElement ,api} from 'lwc';
+import LightningModal from 'lightning/modal';
 
-export default class ProductDetails extends LightningElement {
-    receivedProductId;
-
-    @wire(MessageContext) messageContext;
+export default class ProductDetails extends LightningModal  {
+    @api payload;
+    header='Product Details';
     connectedCallback() {
-        if (!this.subscription) {
-            this.subscription = subscribe(
-                this.messageContext,
-                COMPONENT_COMMUNICATION_CHANNEL,
-                (payload) => this.handleMessage(payload)
-            );
-        }
-    }
-
-    handleMessage(message) {
-        this.receivedProductId = message.recordId;
-        console.log('Received Product ID:', this.receivedProductId);
+        console.log(JSON.stringify(this.payload));
     }
 }

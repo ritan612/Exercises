@@ -1,15 +1,18 @@
 import { LightningElement, wire, api , track} from 'lwc';
 import { MessageContext } from 'lightning/messageService';
+
 import getAllProduct from '@salesforce/apex/ProductServices.getAllProduct';
 import getGenerator from '@salesforce/apex/ProductServices.getGenerator';
 import getParts from '@salesforce/apex/ProductServices.getParts';
 import getSingleProductDetails from '@salesforce/apex/ProductServices.getSingleProductDetails';
 import getProductCount from '@salesforce/apex/ProductServices.getProductCount';
+import createClosedWonOpp from '@salesforce/apex/ClosedWonOpportunityController.createClosedWonOpp';
 
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import PRODUCT_OBJECT from '@salesforce/schema/Product2';
 import COUNTRY_FIELD from '@salesforce/schema/Product2.Country_Of_Origin__c';
 import ProductDetails from 'c/productDetails';
+import UnitPrice from '@salesforce/schema/PricebookEntry.UnitPrice';
 
 
 export default class ShowProduct extends LightningElement {
@@ -20,6 +23,8 @@ export default class ShowProduct extends LightningElement {
     selectedCountry = 'All';
     
     countryOptions = [];
+
+    @api recordId;
     
     
     @track selectedProductIds = [];
@@ -28,21 +33,7 @@ export default class ShowProduct extends LightningElement {
     pageSize = 10;
     totalRecords = 0;
     
-    @wire(MessageContext) messageContext;
     
-    
-    async handleShowDetails(event) {
-        event.preventDefault();
-        const productId =event.target.dataset.id;
-        
-        
-        const payload = await getSingleProductDetails({id:productId});
-        console.log('payload: ',payload);
-        const result = await ProductDetails.open({
-            size: 'medium',
-            payload: payload
-        });
-    }
     
     get typeOptions() {
         return [
@@ -69,26 +60,6 @@ export default class ShowProduct extends LightningElement {
         }
     }
     
-    
-    
-    @wire(getProductCount, { type: '$currentFilter', country: '$selectedCountry' })
-    wiredCount({ data, error }) {
-        if (data !== undefined) {
-            this.totalRecords = data;
-        }
-    }
-    
-    get offsetValue() {
-        return (this.pageNumber - 1) * this.pageSize;
-    }
-    
-    get isFirstPage() {
-        return this.pageNumber === 1;
-    }
-    
-    get isLastPage() {
-        return (this.pageNumber * this.pageSize) >= this.totalRecords;
-    }
     
     wiredAllResult;
     wiredGeneratorResult;
@@ -119,18 +90,26 @@ export default class ShowProduct extends LightningElement {
         this.selectedCountry = event.detail.value;
         this.pageNumber = 1;
     }
-    
-    handlePrevious() {
-        if (this.pageNumber > 1) {
-            this.pageNumber--;
+
+    handleSave(){
+        if (!this.recordId) {
+            console.log('Error Account ID is missing.');
+            return;
         }
+
+        createClosedWonOpp({ 
+            accountId: this.recordId, 
+            productIds: this.selectedProductIds,
+        })
+
+        console.log('id : ' + this.recordId + ' - product ids: '+ this.selectedProductIds);
     }
-    
-    handleNext() {
-        if (!this.isLastPage) {
-            this.pageNumber++;
-        }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+
+
     
     get formattedProducts() {
     let activeData = [];
@@ -143,17 +122,46 @@ export default class ShowProduct extends LightningElement {
         activeData = this.wiredPartsResult.data;
     }
 
-    // No JS filter needed here anymore because Apex returns already-filtered & paginated data
     return activeData.map(pbe => {
+        const prodId = pbe.Product2Id
         return {
-            id: pbe.Product2Id, 
+            id: prodId, 
             name: pbe.Product2 ? pbe.Product2.Name : '',
-            quantity: 1, 
             amount: pbe.UnitPrice || 0,
-            country: pbe.Product2 ? pbe.Product2.Country_Of_Origin__c : ''
+            country: pbe.Product2 ? pbe.Product2.Country_Of_Origin__c : '',
+            isCheck: this.selectedProductIds.includes(prodId)
         };
     });
 }
+    
+    
+
+    handleInputChange(event){
+        const value = event.target.value;
+        if(value && Number(value) !== 1){
+                event.target.setCustomValidity('You can only purchase 1 item from each product');
+        } else {
+            event.target.setCustomValidity('');
+        }
+        
+        inputField.reportValidity();
+    }
+    
+
+    @wire(MessageContext) messageContext;
+
+    async handleShowDetails(event) {
+        event.preventDefault();
+        const productId =event.target.dataset.id;
+        const payload = await getSingleProductDetails({id:productId});
+        console.log('payload: ',payload);
+        const result = await ProductDetails.open({
+            size: 'medium',
+            payload: payload
+        });
+    }
+
+
     
     handleRowSelection(event) {
         const productId = event.target.dataset.id;
@@ -167,6 +175,38 @@ export default class ShowProduct extends LightningElement {
         }
         console.log('Currently Selected Product IDs:', JSON.stringify(this.selectedProductIds));
     }
+
+
     
+    @wire(getProductCount, { type: '$currentFilter', country: '$selectedCountry' })
+    wiredCount({ data, error }) {
+        if (data !== undefined) {
+            this.totalRecords = data;
+        }
+    }
     
+    get offsetValue() {
+        return (this.pageNumber - 1) * this.pageSize;
+    }
+    
+    get isFirstPage() {
+        return this.pageNumber === 1;
+    }
+    
+    get isLastPage() {
+        return (this.pageNumber * this.pageSize) >= this.totalRecords;
+    }
+  
+    handlePrevious() {
+        if (this.pageNumber > 1) {
+            this.pageNumber--;
+        }
+    }
+    
+    handleNext() {
+        if (!this.isLastPage) {
+            this.pageNumber++;
+        }
+    }
+
 }

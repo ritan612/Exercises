@@ -8,8 +8,6 @@ public with sharing class ProductServices {
         } else if (type == 'Parts') {
             baseQuery += ' AND Product2.RecordTypeId = \'012g5000003E6lNAAS\'';
         }
-        
-        // Dynamic country filtering
         if (country != null && country != 'All') {
             baseQuery += ' AND Product2.Country_Of_Origin__c = :country';
         }
@@ -18,9 +16,7 @@ public with sharing class ProductServices {
 
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> getAllProduct(Integer pageSize, Integer offsetValue, String country) {
-        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c ' +
-                       'FROM PricebookEntry ' +
-                       'WHERE Pricebook2.Name = \'B2C Pricebook\' AND IsActive = true';
+        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c FROM PricebookEntry WHERE Pricebook2.Name = \'B2C Pricebook\' AND IsActive = true';
         if (country != null && country != 'All') {
             query += ' AND Product2.Country_Of_Origin__c = :country';
         }
@@ -30,9 +26,7 @@ public with sharing class ProductServices {
 
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> getGenerator(Integer pageSize, Integer offsetValue, String country) {
-        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c ' +
-                       'FROM PricebookEntry ' +
-                       'WHERE Pricebook2.Name = \'B2C Pricebook\' AND Product2.RecordTypeId = \'012g5000003E6i9AAC\' AND IsActive = true';
+        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c FROM PricebookEntry WHERE Pricebook2.Name = \'B2C Pricebook\' AND Product2.RecordTypeId = \'012g5000003E6i9AAC\' AND IsActive = true';
         if (country != null && country != 'All') {
             query += ' AND Product2.Country_Of_Origin__c = :country';
         }
@@ -42,9 +36,7 @@ public with sharing class ProductServices {
 
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> getParts(Integer pageSize, Integer offsetValue, String country) {
-        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c ' +
-                       'FROM PricebookEntry ' +
-                       'WHERE Pricebook2.Name = \'B2C Pricebook\' AND Product2.RecordTypeId = \'012g5000003E6lNAAS\' AND IsActive = true';
+        String query = 'SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c FROM PricebookEntry WHERE Pricebook2.Name = \'B2C Pricebook\' AND Product2.RecordTypeId = \'012g5000003E6lNAAS\' AND IsActive = true';
         if (country != null && country != 'All') {
             query += ' AND Product2.Country_Of_Origin__c = :country';
         }
@@ -58,7 +50,7 @@ public with sharing class ProductServices {
             SELECT Id , Name
             FROM Product2
             WHERE Id = :id
-            limit 1
+            LIMIT 1
         ];
 
         productDetails pd = new productDetails(currentProduct.Name);

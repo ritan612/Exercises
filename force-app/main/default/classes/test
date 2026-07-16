@@ -1,238 +1,66 @@
-import { LightningElement, wire, api } from 'lwc';
+import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import createClosedWonOpp from '@salesforce/apex/ClosedWonOpportunityController.createClosedWonOpp';
 
-// Import our updated Apex methods
-import getAllProduct from '@salesforce/apex/ProductServices.getAllProduct';
-import getGenerator from '@salesforce/apex/ProductServices.getGenerator';
-import getParts from '@salesforce/apex/ProductServices.getParts';
-
-// Dynamic country picklist imports
-import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
-import PRODUCT_OBJECT from '@salesforce/schema/Product2';
-import COUNTRY_FIELD from '@salesforce/schema/Product2.Country_Of_Origin__c';
-
-export default class ShowProduct extends NavigationMixin(LightningElement) {
-    @api products; 
-    selectedProductId; // This will hold the Product2Id
-    selectedProductName = ''; 
-    isDetailsVisible = false;
-    isEditingDescription = false;
+export default class MyComponent extends NavigationMixin(LightningElement) {
+    @api recordId; // Automatically gets the Account Id if placed on an Account record page
     
-    // Active filters
-    currentFilter = 'All'; 
-    selectedCountry = 'All';
+    // Hardcoded or dynamically fetched list of product IDs to pass
+    productIds = ['01tXXXXXXXXXXXXXXX']; 
 
-    countryOptions = [];
+    isLoading = false;
+    showSuccessModal = false;
+    createdOppId = '';
 
-    columns = [
-        { label: 'Product Name', fieldName: 'name', type: 'text' },
-        { label: 'Quantity', fieldName: 'quantity', type: 'number', cellAttributes: { alignment: 'left' } },
-        { label: 'Amount', fieldName: 'amount', type: 'currency', cellAttributes: { alignment: 'left' } }
-    ];
+    handleCreateOpportunity() {
+        this.isLoading = true;
 
-    get typeOptions() {
-        return [
-            { label: 'All', value: 'All' },
-            { label: 'Generator', value: 'Generator' },
-            { label: 'Parts', value: 'Parts' }
-        ];
+        createClosedWonOpp({ 
+            accountId: this.recordId, 
+            productIds: this.productIds 
+        })
+        .then((result) => {
+            this.isLoading = false;
+            // The apex wrapper returns { recordId: '...', isSuccess: true }
+            if (result && result.isSuccess) {
+                this.createdOppId = result.recordId;
+                this.showSuccessModal = true; // Open the custom popup modal
+                
+                this.showToast('Success', 'Opportunity created successfully!', 'success');
+            } else {
+                this.showToast('Error', 'Something went wrong.', 'error');
+            }
+        })
+        .catch((error) => {
+            this.isLoading = false;
+            this.showToast('Error', error.body.message, 'error');
+        });
     }
 
-    // Dynamic Country Dropdown
-    @wire(getObjectInfo, { objectApiName: PRODUCT_OBJECT })
-    productMetadata;
-
-    @wire(getPicklistValues, { 
-        recordTypeId: '$productMetadata.data.defaultRecordTypeId', 
-        fieldApiName: COUNTRY_FIELD 
-    })
-    wiredPicklist({ error, data }) {
-        if (data) {
-            const dynamicOptions = data.values.map(picklist => ({
-                label: picklist.label,
-                value: picklist.value
-            }));
-            this.countryOptions = [{ label: 'All Countries', value: 'All' }, ...dynamicOptions];
-        }
-    }
-
-    // Three Apex Wire methods returning PricebookEntry lists
-    wiredAllResult;
-    wiredGeneratorResult;
-    wiredPartsResult;
-
-    @wire(getAllProduct)
-    wiredAll(result) {
-        this.wiredAllResult = result;
-    }
-
-    @wire(getGenerator)
-    wiredGenerator(result) {
-        this.wiredGeneratorResult = result;
-    }
-
-    @wire(getParts)
-    wiredParts(result) {
-        this.wiredPartsResult = result;
-    }
-
-    // Dropdown Handlers
-    handleTypeChange(event) {
-        this.currentFilter = event.detail.value;
-        this.resetDetails();
-    }
-
-    handleCountryChange(event) {
-        this.selectedCountry = event.detail.value;
-        this.resetDetails();
-    }
-
-    // Dynamic filtering & Mapping
-    // get formattedProducts() {
-    //     let activeData = [];
-
-    //     // 1. Select active price list
-    //     if (this.currentFilter === 'All' && this.wiredAllResult && this.wiredAllResult.data) {
-    //         activeData = this.wiredAllResult.data;
-    //     } else if (this.currentFilter === 'Generator' && this.wiredGeneratorResult && this.wiredGeneratorResult.data) {
-    //         activeData = this.wiredGeneratorResult.data;
-    //     } else if (this.currentFilter === 'Parts' && this.wiredPartsResult && this.wiredPartsResult.data) {
-    //         activeData = this.wiredPartsResult.data;
-    //     }
-
-        // 2. Map and parse relationship properties
-    //     return activeData
-    //         .map(pbe => {
-    //             return {
-    //                 id: pbe.Product2Id, // Navigate/Edit using the actual Product ID
-    //                 name: pbe.Product2 ? pbe.Product2.Name : '',
-    //                 quantity: 1, // Locked at 1
-    //                 amount: pbe.UnitPrice || 0, // Gotten dynamically from the B2C Pricebook!
-    //                 country: pbe.Product2 ? pbe.Product2.Country_Of_Origin__c : ''
-    //             };
-    //         })
-    //         .filter(prod => {
-    //             // 3. Keep filters working together
-    //             return this.selectedCountry === 'All' || prod.country === this.selectedCountry;
-    //         });
-    // }
-
-    // Checkbox and Row Selection
-    handleRowSelection(event) {
-        const selectedRows = event.detail.selectedRows;
-        if (selectedRows.length > 0) {
-            const lastSelectedRow = selectedRows[selectedRows.length - 1];
-            this.selectedProductId = lastSelectedRow.id; // Map back to Product2 ID
-            this.selectedProductName = lastSelectedRow.name;
-            this.isDetailsVisible = true;
-            this.isEditingDescription = false;
-        } else {
-            this.resetDetails();
-        }
-    }
-
-    get productDetailsHeader() {
-        return this.selectedProductName + ' Details';
-    }
-
-    navigateToProduct() {
+    // Navigates to the newly created Opportunity
+    navigateToOpportunity() {
+        this.closeModal();
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
             attributes: {
-                recordId: this.selectedProductId,
-                objectApiName: 'Product2',
+                recordId: this.createdOppId,
                 actionName: 'view'
             }
         });
     }
 
-    handleEnableEdit() {
-        this.isEditingDescription = true;
+    closeModal() {
+        this.showSuccessModal = false;
     }
 
-    handleCancelEdit() {
-        this.isEditingDescription = false;
-    }
-
-    handleSuccess() {
-        this.isEditingDescription = false;
-        // Refresh all wires to keep unit prices and product parameters current
-        refreshApex(this.wiredAllResult);
-        refreshApex(this.wiredGeneratorResult);
-        refreshApex(this.wiredPartsResult);
-    }
-
-    resetDetails() {
-        this.isDetailsVisible = false;
-        this.isEditingDescription = false;
-        this.selectedProductName = '';
-        this.selectedProductId = undefined;
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({ title, message, variant })
+        );
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public with sharing class ProductServices {
-    
-    @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> getAllProduct() {
-        return [
-            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
-            FROM PricebookEntry
-            WHERE Pricebook2.Name = 'B2C Pricebook' AND IsActive = true
-        ];
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> getGenerator() {
-        return [
-            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
-            FROM PricebookEntry
-            WHERE Pricebook2.Name = 'B2C Pricebook' 
-            AND Product2.RecordTypeId = '012g5000003E6i9AAC' 
-            AND IsActive = true
-        ];
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> getParts() {
-        return [
-            SELECT Id, UnitPrice, Product2Id, Product2.Name, Product2.Country_Of_Origin__c
-            FROM PricebookEntry
-            WHERE Pricebook2.Name = 'B2C Pricebook' 
-            AND Product2.RecordTypeId = '012g5000003E6lNAAS' 
-            AND IsActive = true
-        ];
-    }
-}
 
 
 
@@ -247,78 +75,41 @@ public with sharing class ProductServices {
 
 
 <template>
-    <lightning-card title="Product Action Center" icon-name="custom:custom63">
-        
-        <div class="slds-grid slds-gutters slds-m-around_medium">
-            <div class="slds-col slds-size_1-of-2">
-                <lightning-combobox
-                    name="typeFilter"
-                    label="Product Type"
-                    value={currentFilter}
-                    placeholder="Select Type"
-                    options={typeOptions}
-                    onchange={handleTypeChange}>
-                </lightning-combobox>
-            </div>
-            <div class="slds-col slds-size_1-of-2">
-                <lightning-combobox
-                    name="countryFilter"
-                    label="Country of Origin"
-                    value={selectedCountry}
-                    placeholder="Select Country"
-                    options={countryOptions}
-                    onchange={handleCountryChange}>
-                </lightning-combobox>
-            </div>
+    <lightning-card title="Opportunity Generator" icon-name="standard:opportunity">
+        <div class="slds-m-around_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner alt-text="Creating Opportunity..." size="medium"></lightning-spinner>
+            </template>
+
+            <lightning-button 
+                label="Create Closed Won Opp" 
+                variant="brand" 
+                onclick={handleCreateOpportunity}
+                disabled={isLoading}>
+            </lightning-button>
         </div>
-
-        <lightning-card title="Selected Products" icon-name="standard:product">
-            <div class="slds-p-around_medium">
-                <template lwc:if={formattedProducts}>
-                    <lightning-datatable
-                        key-field="id"
-                        data={formattedProducts}
-                        columns={columns}
-                        onrowselection={handleRowSelection}>
-                    </lightning-datatable>
-                </template>
-            </div>
-        </lightning-card>
-
-        <template lwc:if={isDetailsVisible}>
-            <div class="slds-m-around_medium">
-                <lightning-card title={productDetailsHeader} icon-name="standard:account">
-                    
-                    <div slot="actions">
-                        <lightning-button label="Go To Product Page" onclick={navigateToProduct} variant="neutral"></lightning-button>
-                    </div>
-
-                    <div class="slds-p-horizontal_medium">
-                        <template lwc:if={isEditingDescription}>
-                            <lightning-record-edit-form record-id={selectedProductId} object-api-name="Product2" onsuccess={handleSuccess}>
-                                <lightning-messages></lightning-messages>
-                                <lightning-input-field field-name="Description"></lightning-input-field>
-                                <div class="slds-m-top_medium">
-                                    <lightning-button type="submit" label="Save Description" variant="success"></lightning-button>
-                                    <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-left_x-small"></lightning-button>
-                                </div>
-                            </lightning-record-edit-form>
-                        </template>
-
-                        <template lwc:else>
-                            <lightning-record-view-form record-id={selectedProductId} object-api-name="Product2">
-                                <lightning-output-field field-name="Name"></lightning-output-field>
-                                <lightning-output-field field-name="Description"></lightning-output-field>
-                                <div class="slds-m-top_small">
-                                    <lightning-button label="Edit Description" icon-name="utility:edit" onclick={handleEnableEdit}></lightning-button>
-                                </div>
-                            </lightning-record-view-form>
-                        </template>
-                    </div>
-
-                </lightning-card>
-            </div>
-        </template>
-
     </lightning-card>
+
+    <template if:true={showSuccessModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small" variant="inverse"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium slds-hyphenate">Success!</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p class="slds-text-align_center">The Closed Won Opportunity has been created successfully.</p>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal}>Close</button>
+                    <button class="slds-button slds-button_brand" onclick={navigateToOpportunity}>View Opportunity</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
 </template>

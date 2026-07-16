@@ -3,7 +3,6 @@ public with sharing class ClosedWonOpportunityController {
     public class ResultWrapper {
         @AuraEnabled public Id recordId { get; set; }
         @AuraEnabled public Boolean isSuccess { get; set; }
-        @AuraEnabled public Integer unitPrice{ get; set;}
         
         public ResultWrapper(Id recordId, Boolean isSuccess) {
             this.recordId = recordId;

@@ -1,5 +1,6 @@
 import { LightningElement, wire, api , track} from 'lwc';
 import { MessageContext } from 'lightning/messageService';
+import { NavigationMixin } from 'lightning/navigation';
 
 import getAllProduct from '@salesforce/apex/ProductServices.getAllProduct';
 import getGenerator from '@salesforce/apex/ProductServices.getGenerator';
@@ -12,10 +13,10 @@ import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import PRODUCT_OBJECT from '@salesforce/schema/Product2';
 import COUNTRY_FIELD from '@salesforce/schema/Product2.Country_Of_Origin__c';
 import ProductDetails from 'c/productDetails';
-import UnitPrice from '@salesforce/schema/PricebookEntry.UnitPrice';
+import NewClosedWonOpp from 'c/newClosedWonOpp';
 
 
-export default class ShowProduct extends LightningElement {
+export default class ShowProduct extends NavigationMixin(LightningElement) {
     @api products; 
     selectedProductId;
     selectedProductName = ''; 
@@ -91,16 +92,34 @@ export default class ShowProduct extends LightningElement {
         this.pageNumber = 1;
     }
 
-    handleSave(){
+    async handleSave(event){
         if (!this.recordId) {
             console.log('Error Account ID is missing.');
             return;
         }
 
-        createClosedWonOpp({ 
+        event.preventDefault();
+        const payload1 = await createClosedWonOpp({ 
             accountId: this.recordId, 
             productIds: this.selectedProductIds,
-        })
+        });
+        console.log('payload: ',payload1);
+        const result = await NewClosedWonOpp.open({
+            size: 'medium',
+            payload1: payload1
+        });
+        console.log('result: ',result);
+        if(result == 'Navigate'){
+                this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: payload1.recordId,
+                    objectApiName: 'Opportunity',
+                    actionName: 'view'
+                }
+            });
+        }
+        this.selectedProductIds=[];
 
         console.log('id : ' + this.recordId + ' - product ids: '+ this.selectedProductIds);
     }
@@ -108,6 +127,8 @@ export default class ShowProduct extends LightningElement {
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+
+    
 
 
     
@@ -207,6 +228,10 @@ export default class ShowProduct extends LightningElement {
         if (!this.isLastPage) {
             this.pageNumber++;
         }
+    }
+
+    handleup(){
+        window.scrollTo({top: 0,left: 0, behavior: 'smooth'});
     }
 
 }

@@ -1,6 +1,85 @@
 <template>
     <lightning-modal-header label={header}></lightning-modal-header>
-        <lightning-modal-body>
-    <h1>{payload.productName}</h1>
+    
+    <lightning-modal-body class="slds-p-around_medium">
+        <div class="slds-border_bottom slds-p-bottom_small slds-m-bottom_medium">
+            <h1 class="slds-text-heading_large slds-font-weight_bold slds-text-color_default">{payload.productName}</h1>
+        </div>
+
+        <div class="slds-m-bottom_xlarge slds-grid slds-grid_align-center">
+            <div class="slds-size_1-of-1" style="max-width: 600px;">
+                <c-pictures record-id={payload.prodid}></c-pictures>
+            </div>
+        </div>
+
+        <div class="slds-section slds-is-open">
+            <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">
+                <span class="slds-truncate slds-p-vertical_xx-small slds-font-weight_bold" title="Core Details">Core Product Details</span>
+            </h3>
+            
+            <div class="slds-section__content slds-p-horizontal_small">
+                <div class="slds-grid slds-wrap slds-gutters_large">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                            <span class="slds-form-element__label slds-text-color_weak">Serial Number</span>
+                            <div class="slds-form-element__static slds-font-weight_medium">{payload.serialNumber}</div>
+                        </div>
+                        <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                            <span class="slds-form-element__label slds-text-color_weak">Country of Origin</span>
+                            <div class="slds-form-element__static">{payload.countryOfOrigin}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                            <span class="slds-form-element__label slds-text-color_weak">Average Life Expectancy</span>
+                            <div class="slds-form-element__static">{payload.averageLifeExpectancy}</div>
+                        </div>
+                        <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                            <span class="slds-form-element__label slds-text-color_weak">Description</span>
+                            <div class="slds-form-element__static slds-text-longform">{payload.description}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <template if:true={isGenerator}>
+            <div class="slds-section slds-is-open slds-m-top_large">
+                <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">
+                    <span class="slds-truncate slds-p-vertical_xx-small slds-font-weight_bold" title="Generator Performance">Generator Performance & Specs</span>
+                </h3>
+                
+                <div class="slds-section__content slds-p-horizontal_small">
+                    <div class="slds-grid slds-wrap slds-gutters_large">
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                                <span class="slds-form-element__label slds-text-color_weak">Size Class</span>
+                                <div class="slds-form-element__static">{payload.size}</div>
+                            </div>
+                            <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                                <span class="slds-form-element__label slds-text-color_weak">Phase Configuration</span>
+                                <div class="slds-form-element__static">{payload.phase}</div>
+                            </div>
+                            <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                                <span class="slds-form-element__label slds-text-color_weak">Engine Architecture</span>
+                                <div class="slds-form-element__static">{payload.engineType}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                                <span class="slds-form-element__label slds-text-color_weak">Operational Weight</span>
+                                <div class="slds-form-element__static">{payload.weight}</div>
+                            </div>
+                            <div class="slds-form-element slds-form-element_stacked slds-border_bottom slds-p-vertical_x-small">
+                                <span class="slds-form-element__label slds-text-color_weak">Power Output Rating</span>
+                                <div class="slds-form-element__static slds-text-color_success slds-font-weight_bold">{payload.powerGenerated}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </lightning-modal-body>
 </template>

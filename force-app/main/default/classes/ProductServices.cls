@@ -43,25 +43,65 @@ public with sharing class ProductServices {
         query += ' LIMIT :pageSize OFFSET :offsetValue';
         return Database.query(query);
     }
+    
 
     @AuraEnabled(cacheable=false)
     public static productDetails getSingleProductDetails(Id id){
         Product2 currentProduct = [
-            SELECT Id , Name
+            SELECT Id , Name, Serial_Number__c, Description, Country_Of_Origin__c, Average_Life_Expectancy__c, Image__c, Size__c, Phase__c , Engine_Type__c, Weight__c, Power_Generated__c, RecordType.DeveloperName
             FROM Product2
             WHERE Id = :id
             LIMIT 1
         ];
 
-        productDetails pd = new productDetails(currentProduct.Name);
+        productDetails pd = new productDetails(currentProduct.Id ,currentProduct.Name, currentProduct.Serial_Number__c, currentProduct.Description, currentProduct.Country_Of_Origin__c, currentProduct.Average_Life_Expectancy__c, currentProduct.Image__c, currentProduct.Size__c, currentProduct.Phase__c , currentProduct.Engine_Type__c, currentProduct.Weight__c, currentProduct.Power_Generated__c, currentProduct.recordType.DeveloperName);
         return pd;
     }
 
     public class productDetails {
-        @AuraEnabled public String productName {get;set;}
+    @AuraEnabled public Id prodid {get; set;}
+    @AuraEnabled public String productName { get; set; }
+    @AuraEnabled public String serialNumber { get; set; }
+    @AuraEnabled public String description { get; set; }
+    @AuraEnabled public String countryOfOrigin { get; set; }
+    @AuraEnabled public Decimal averageLifeExpectancy { get; set; }
+    @AuraEnabled public String image { get; set; }
+    @AuraEnabled public String size { get; set; }
+    @AuraEnabled public String phase { get; set; }
+    @AuraEnabled public String engineType { get; set; }
+    @AuraEnabled public Decimal weight { get; set; } 
+    @AuraEnabled public Decimal powerGenerated { get; set; }
+    @AuraEnabled public String recordTypeDeveloperName { get; set; }
 
-        public productDetails(String Name) {
-            this.productName = Name;
-        }
+    public ProductDetails(
+        Id id,
+        String name, 
+        String serialNumber, 
+        String description, 
+        String countryOfOrigin, 
+        Decimal averageLifeExpectancy, 
+        String image, 
+        String size, 
+        String phase, 
+        String engineType, 
+        Decimal weight, 
+        Decimal powerGenerated, 
+        String recordTypeDeveloperName
+    ) {
+        this.prodid = id;
+        this.productName = name;
+        this.serialNumber = serialNumber;
+        this.description = description;
+        this.countryOfOrigin = countryOfOrigin;
+        this.averageLifeExpectancy = averageLifeExpectancy;
+        this.image = image;
+        this.size = size;
+        this.phase = phase;
+        this.engineType = engineType;
+        this.weight = weight;
+        this.powerGenerated = powerGenerated;
+        this.recordTypeDeveloperName = recordTypeDeveloperName;
     }
+}
+
 }

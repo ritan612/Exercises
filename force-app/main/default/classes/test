@@ -1,115 +1,79 @@
-import { LightningElement, api, wire } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import createClosedWonOpp from '@salesforce/apex/ClosedWonOpportunityController.createClosedWonOpp';
+import { LightningElement, wire, api } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 
-export default class MyComponent extends NavigationMixin(LightningElement) {
-    @api recordId; // Automatically gets the Account Id if placed on an Account record page
-    
-    // Hardcoded or dynamically fetched list of product IDs to pass
-    productIds = ['01tXXXXXXXXXXXXXXX']; 
+// Import the fields you want to autofill from the Opportunity
+import ACCOUNT_NAME_FIELD from '@salesforce/schema/Opportunity.Account.Name';
 
-    isLoading = false;
-    showSuccessModal = false;
-    createdOppId = '';
+export default class PicklistComponent extends LightningElement {
+    @api recordId; // Automatically gets the Opportunity ID from the page
 
-    handleCreateOpportunity() {
-        this.isLoading = true;
+    companyName = '';
+    contactName = '';
+    contactEmail = '';
+    contactPhone = '';
 
-        createClosedWonOpp({ 
-            accountId: this.recordId, 
-            productIds: this.productIds 
-        })
-        .then((result) => {
-            this.isLoading = false;
-            // The apex wrapper returns { recordId: '...', isSuccess: true }
-            if (result && result.isSuccess) {
-                this.createdOppId = result.recordId;
-                this.showSuccessModal = true; // Open the custom popup modal
-                
-                this.showToast('Success', 'Opportunity created successfully!', 'success');
-            } else {
-                this.showToast('Error', 'Something went wrong.', 'error');
-            }
-        })
-        .catch((error) => {
-            this.isLoading = false;
-            this.showToast('Error', error.body.message, 'error');
-        });
-    }
-
-    // Navigates to the newly created Opportunity
-    navigateToOpportunity() {
-        this.closeModal();
-        this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
-            attributes: {
-                recordId: this.createdOppId,
-                actionName: 'view'
-            }
-        });
-    }
-
-    closeModal() {
-        this.showSuccessModal = false;
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({ title, message, variant })
-        );
+    @wire(getRecord, { 
+        recordId: '$recordId', 
+        fields: [ACCOUNT_NAME_FIELD] 
+    })
+    wiredOpportunity({ error, data }) {
+        if (data) {
+            // Autofill Company with the related Account Name
+            this.companyName = getFieldValue(data, ACCOUNT_NAME_FIELD) || '';
+            
+            /* 
+               If you store Contact Name, Email, or Phone directly on the Opportunity, 
+               import those fields above and map them here like this:
+               this.contactName = getFieldValue(data, OPPTY_CONTACT_NAME_FIELD) || '';
+            */
+        } else if (error) {
+            console.error('Error fetching Opportunity data:', error);
+        }
     }
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 <template>
-    <lightning-card title="Opportunity Generator" icon-name="standard:opportunity">
-        <div class="slds-m-around_medium">
-            <template if:true={isLoading}>
-                <lightning-spinner alt-text="Creating Opportunity..." size="medium"></lightning-spinner>
-            </template>
+    <form action="https://webto.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8&orgId=00Dg500000E9Rlh" method="POST">
+        
+        <!-- Hidden Required Fields -->
+        <input type="hidden" name="orgid" value="00Dg500000E9Rlh" />
+        <input type="hidden" name="retURL" value="http://" />
+        <input type="hidden" id="external" name="external" value="1" />
 
-            <lightning-button 
-                label="Create Closed Won Opp" 
-                variant="brand" 
-                onclick={handleCreateOpportunity}
-                disabled={isLoading}>
-            </lightning-button>
-        </div>
-    </lightning-card>
+        <!-- Autofilled Fields -->
+        <label for="name">Contact Name</label>
+        <input id="name" maxlength="80" name="name" size="20" type="text" value={contactName} /><br/>
 
-    <template if:true={showSuccessModal}>
-        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
-                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small" variant="inverse"></lightning-icon>
-                    </button>
-                    <h2 class="slds-text-heading_medium slds-hyphenate">Success!</h2>
-                </header>
+        <label for="email">Email</label>
+        <input id="email" maxlength="80" name="email" size="20" type="text" value={contactEmail} /><br/>
 
-                <div class="slds-modal__content slds-p-around_medium">
-                    <p class="slds-text-align_center">The Closed Won Opportunity has been created successfully.</p>
-                </div>
+        <label for="phone">Phone</label>
+        <input id="phone" maxlength="40" name="phone" size="20" type="text" value={contactPhone} /><br/>
 
-                <footer class="slds-modal__footer">
-                    <button class="slds-button slds-button_neutral" onclick={closeModal}>Close</button>
-                    <button class="slds-button slds-button_brand" onclick={navigateToOpportunity}>View Opportunity</button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+        <label for="company">Company</label>
+        <input id="company" maxlength="80" name="company" size="20" type="text" value={companyName} /><br/>
+
+        <!-- Manual Entry Fields -->
+        <label for="subject">Subject</label>
+        <input id="subject" maxlength="80" name="subject" size="20" type="text" /><br/>
+
+        <label for="description">Description</label>
+        <textarea name="description"></textarea><br/>
+
+        <label for="reason">Case Reason</label>
+        <select id="reason" name="reason">
+            <option value="">--None--</option>
+            <option value="Installation">Installation</option>
+            <option value="Equipment Complexity">Equipment Complexity</option>
+            <option value="Performance">Performance</option>
+            <option value="Breakdown">Breakdown</option>
+            <option value="Equipment Design">Equipment Design</option>
+            <option value="Feedback">Feedback</option>
+            <option value="Other">Other</option>
+        </select><br/>
+
+        <input type="submit" name="submit" value="Submit Case" />
+    </form>
 </template>

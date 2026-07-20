@@ -1,34 +1,35 @@
 <template>
     <lightning-card title="Product Action Center" icon-name="custom:custom63">
         
-        <div class="slds-grid slds-gutters slds-m-around_medium">
-            <div class="slds-col slds-size_2-of-5">
-                <lightning-combobox
-                    name="typeFilter"
-                    label="Product Type"
-                    value={currentFilter}
-                    placeholder="Select Type"
-                    options={typeOptions}
-                    onchange={handleTypeChange}>
-                </lightning-combobox>
-            </div>
-            <div class="slds-col slds-size_2-of-5">
-                <lightning-combobox
-                    name="countryFilter"
-                    label="Country of Origin"
-                    value={selectedCountry}
-                    placeholder="Select Country"
-                    options={countryOptions}
-                    onchange={handleCountryChange}>
-                </lightning-combobox>
-            </div>
-            <div class="slds-col slds-size_1-of-5">
-                <lightning-button 
-                    label="Save"
-                    onclick={handleSave}>
-                </lightning-button> 
-            </div>
-        </div>
+        <div class="slds-grid slds-grid_align-center slds-gutters slds-m-around_medium">
+    <div class="slds-col slds-size_2-of-5">
+        <lightning-combobox
+            name="typeFilter"
+            label="Product Type"
+            value={currentFilter}
+            placeholder="Select Type"
+            options={typeOptions}
+            onchange={handleTypeChange}>
+        </lightning-combobox>
+    </div>
+    <div class="slds-col slds-size_2-of-5">
+        <lightning-combobox
+            name="countryFilter"
+            label="Country of Origin"
+            value={selectedCountry}
+            placeholder="Select Country"
+            options={countryOptions}
+            onchange={handleCountryChange}>
+        </lightning-combobox>
+    </div>
+    <div class="slds-col slds-grow-none slds-grid slds-grid_vertical-align-end">
+        <lightning-button 
+            label="Save"
+            variant="brand"
+            onclick={handleSave}>
+        </lightning-button> 
+    </div>
+</div>
 
         <div class="slds-box slds-theme_default slds-m-around_medium">
             <table class="slds-table slds-table_bordered slds-table_fixed-layout" role="grid" aria-label="Products Table">

@@ -7,4 +7,8 @@ export default class ProductDetails extends LightningModal  {
     connectedCallback() {
         console.log(JSON.stringify(this.payload));
     }
+
+    get isGenerator() {
+    return this.payload?.recordTypeDeveloperName === 'Generators';
+}
 }

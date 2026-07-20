@@ -1,0 +1,40 @@
+<template>
+    <form action="https://webto.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8&orgId=00Dg500000E9Rlh" method="POST">
+        
+        <input type="hidden" name="orgid" value="00Dg500000E9Rlh" />
+        <input type="hidden" name="retURL" value="http://" />
+        <input type="hidden" id="external" name="external" value="1" />
+
+        <label for="name">Contact Name</label>
+        <input id="name" name="name" type="text" value={contactName} readonly /><br/>
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="text" value={contactEmail} readonly /><br/>
+
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" type="text" value={contactPhone} readonly /><br/>
+
+        <label for="company">Company</label>
+        <input id="company" name="company" type="text" value={companyName} readonly /><br/>
+
+        <label for="subject">Subject</label>
+        <input id="subject" maxlength="80" name="subject" size="20" type="text" /><br/>
+
+        <label for="description">Description</label>
+        <textarea name="description"></textarea><br/>
+
+        <label for="reason">Case Reason</label>
+        <select id="reason" name="reason">
+            <option value="">--None--</option>
+            <option value="Installation">Installation</option>
+            <option value="Equipment Complexity">Equipment Complexity</option>
+            <option value="Performance">Performance</option>
+            <option value="Breakdown">Breakdown</option>
+            <option value="Equipment Design">Equipment Design</option>
+            <option value="Feedback">Feedback</option>
+            <option value="Other">Other</option>
+        </select><br/>
+
+        <input type="submit" name="submit" value="Submit Case" />
+    </form>
+</template>

@@ -1,0 +1,27 @@
+<template>
+    <div class="slds-size_1-of-1 slds-grid slds-grid_align-center">
+        <div class="slds-box slds-box_x-small slds-text-align_center slds-m-around_x-small slds-size_1-of-1" style="max-width: 500px;">
+            
+            <template if:true={hasImages}>
+                <div >
+                    <lightning-carousel>
+                        <template for:each={imagesList} for:item="singleImage">                  
+                            <lightning-carousel-image
+                                key={singleImage.id}
+                                src={singleImage.url}
+                                alternative-text="Product Image Display">
+                            </lightning-carousel-image>
+                        </template>
+                    </lightning-carousel>
+                </div>
+            </template>
+
+            <template if:false={hasImages}>
+                <div class="slds-p-around_medium slds-text-color_weak" style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                    No files or images attached to this product yet.
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>

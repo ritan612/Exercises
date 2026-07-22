@@ -17,8 +17,12 @@ public with sharing class sendWonOppPdfQueueable implements Queueable, Database.
 
             PageReference pdfPage = Page.OpportunityDetails; 
             pdfPage.getParameters().put('id', oppId);
-            
-            Blob pdfBlob = pdfPage.getContent();
+            Blob pdfBlob ;
+            if(Test.isRunningTest()){
+                pdfBlob = Blob.valueOf('Dummy Text');
+            }else {
+            pdfBlob= pdfPage.getContent();
+            }
             
             Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
             attachment.setFileName('Opportunity_Details_' + oppId + '.pdf');

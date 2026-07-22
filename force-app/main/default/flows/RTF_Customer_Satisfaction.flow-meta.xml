@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Customer_Satisfaction_Web</name>
+        <label>Send Customer Satisfaction Web</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>Recipients_Email</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>rita.nassar@eit-mena.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>Customer Satisfaction</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>&lt;p&gt;{!EmailBody}&lt;/p&gt;</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>add_person_account_email</name>
+        <label>add person account email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>Recipients_Email</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Record.Account.PersonContact.Email</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Send_Customer_Satisfaction_Web</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>add_representatives_emails</name>
+        <label>add representatives emails</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>Recipients_Email</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>looping_over_representatives_emails.Email</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>looping_over_representatives_emails</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_Account_name</name>
+        <label>Assign Account name</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>AccountName</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Account.PersonContact.LastName</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>add_person_account_email</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_Account_name_2</name>
+        <label>Assign Account name</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>AccountName</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Account.Name</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>get_representatives_emails</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>is_person_account</name>
+        <label>is person account?</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Account.IsPersonAccount</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Account_name</targetReference>
+            </connector>
+            <label>yes</label>
+        </rules>
+        <rules>
+            <name>no</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Account.IsPersonAccount</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Account_name_2</targetReference>
+            </connector>
+            <label>no</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <interviewLabel>RTF-Customer Satisfaction {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>RTF-Customer Satisfaction</label>
+    <loops>
+        <name>looping_over_representatives_emails</name>
+        <label>looping over representatives emails</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <collectionReference>get_representatives_emails</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>add_representatives_emails</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Send_Customer_Satisfaction_Web</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>get_related_account</name>
+        <label>get related account</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>is_person_account</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Account.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <queriedFields>Id</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>get_representatives_emails</name>
+        <label>get representatives emails</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>looping_over_representatives_emails</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>get_related_account.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Contact</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Email</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>get_related_account</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>StageName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Closed Won</stringValue>
+            </value>
+        </filters>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>EmailBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;meta name=&quot;x-apple-disable-message-reformatting&quot;&gt;
+  &lt;title&gt;Thank You for Your Purchase | Power Motors&lt;/title&gt;
+  &lt;style&gt;
+    body,
+    table,
+    td,
+    a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    table,
+    td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+
+    img {
+      -ms-interpolation-mode: bicubic;
+    }
+
+    table {
+      border-collapse: collapse !important;
+    }
+
+    @media only screen and (max-width: 680px) {
+      .email-container {
+        width: 100% !important;
+      }
+
+      .mobile-padding {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+
+      .stack-column,
+      .stack-column td {
+        display: block !important;
+        width: 100% !important;
+        text-align: left !important;
+      }
+
+      .stack-column .button-cell {
+        padding: 18px 0 0 !important;
+        text-align: left !important;
+      }
+
+      .footer-column {
+        display: block !important;
+        width: 100% !important;
+        text-align: left !important;
+      }
+
+      .footer-column-right {
+        padding-top: 10px !important;
+      }
+
+      h1 {
+        font-size: 30px !important;
+        line-height: 36px !important;
+      }
+
+      h2 {
+        font-size: 21px !important;
+        line-height: 30px !important;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body style=&quot;margin:0; padding:0; background-color:#f4f6f9;&quot;&gt;
+  &lt;!-- Hidden preheader text --&gt;
+  &lt;div style=&quot;display:none; max-height:0; overflow:hidden; opacity:0; color:transparent;&quot;&gt;
+    Thank you for choosing Power Motors. Our support team is here to assist you.
+  &lt;/div&gt;
+
+  &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;100%&quot; style=&quot;background-color:#f4f6f9;&quot;&gt;
+    &lt;tr&gt;
+      &lt;td align=&quot;center&quot; style=&quot;padding:24px 12px 0;&quot;&gt;
+
+        &lt;!-- Banner: constrained so it no longer stretches across the full screen --&gt;
+        &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;650&quot; class=&quot;email-container&quot; style=&quot;width:100%; max-width:650px;&quot;&gt;
+          &lt;tr&gt;
+            &lt;td align=&quot;center&quot; style=&quot;background-color:#080c16;&quot;&gt;
+              &lt;img
+                alt=&quot;Power Motors&quot;
+                src=&quot;https://orgfarm-0793b2f04e-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;amp;versionId=068g5000004Zcsv&amp;amp;operationContext=DELIVERY&amp;amp;contentId=05Tg500000DSRCJ&amp;amp;page=0&amp;amp;d=/a/g50000003uTt/3coJYrBegp2ClpSTUfnULTKAwJ2ZGL7u0qVzPgeL4f8&amp;amp;oid=00Dg500000E9Rlh&amp;amp;dpt=null&amp;amp;viewId=&quot;
+                width=&quot;650&quot;
+                style=&quot;display:block; width:100%; max-width:650px; height:auto; border:0; outline:none; text-decoration:none;&quot;
+              &gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/table&gt;
+
+        &lt;!-- Main content --&gt;
+        &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;650&quot; class=&quot;email-container&quot; style=&quot;width:100%; max-width:650px; background-color:#ffffff;&quot;&gt;
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:40px 32px 18px; font-family:Georgia, &apos;Times New Roman&apos;, serif;&quot;&gt;
+              &lt;h1 style=&quot;margin:0; color:#0a2058; font-size:36px; line-height:42px; font-weight:400; text-align:left;&quot;&gt;
+                Thank You for Choosing Power Motors
+              &lt;/h1&gt;
+              &lt;h2 style=&quot;margin:8px 0 0; color:#0593f5; font-size:24px; line-height:32px; font-weight:400; text-align:left;&quot;&gt;
+                Your Purchase Is Backed by Our Support
+              &lt;/h2&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:0 32px 30px; font-family:Arial, Helvetica, sans-serif; color:#151c26;&quot;&gt;
+              &lt;p style=&quot;margin:0; font-size:18px; line-height:30px;&quot;&gt;Hello  {!AccountName}&lt;/p&gt;
+
+              &lt;p style=&quot;margin:20px 0 0; font-size:18px; line-height:30px;&quot;&gt;
+                Thank you for your recent purchase from Power Motors. We appreciate your trust in us and are committed to supporting you throughout the life of your generator, equipment, or spare parts.
+              &lt;/p&gt;
+
+              &lt;p style=&quot;margin:20px 0 0; font-size:18px; line-height:30px;&quot;&gt;
+                For assistance with your order, installation, warranty, maintenance, technical questions, or spare parts, please use the support request form below. Providing complete information will help our team respond more efficiently.
+              &lt;/p&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+
+          &lt;!-- Support callout --&gt;
+          &lt;tr&gt;
+            &lt;td style=&quot;padding:0 24px 30px;&quot;&gt;
+              &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;100%&quot; style=&quot;background-color:#0a2058; border-radius:8px;&quot;&gt;
+                &lt;tr class=&quot;stack-column&quot;&gt;
+                  &lt;td valign=&quot;middle&quot; class=&quot;mobile-padding&quot; style=&quot;padding:26px 20px 26px 24px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; font-weight:600; color:#ffffff;&quot;&gt;
+                    Need assistance with your purchase? Submit a support request.
+                  &lt;/td&gt;
+                  &lt;td align=&quot;right&quot; valign=&quot;middle&quot; class=&quot;button-cell&quot; style=&quot;padding:20px 24px 20px 10px; white-space:nowrap;&quot;&gt;
+                    &lt;!-- Replace this Zoom URL with the actual support-form URL before sending. --&gt;
+                    &lt;a href=&quot;https://orgfarm-0793b2f04e-dev-ed.develop.my.site.com/customersatisfaction/?id={!$Record.Id}&quot; style=&quot;background-color:#0593f5; border:1px solid #0593f5; border-radius:22px; color:#ffffff; display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:bold; line-height:44px; text-align:center; text-decoration:none; width:160px; -webkit-text-size-adjust:none;&quot;&gt;
+                      Request Support
+                    &lt;/a&gt;
+                  &lt;/td&gt;
+                &lt;/tr&gt;
+              &lt;/table&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:0 32px 20px; font-family:Arial, Helvetica, sans-serif; color:#151c26;&quot;&gt;
+              &lt;p style=&quot;margin:0; font-size:18px; line-height:30px;&quot;&gt;
+                Once your request is submitted, our team will review the information and contact you using the details provided in the form.
+              &lt;/p&gt;
+
+              &lt;p style=&quot;margin:20px 0 0; font-size:18px; line-height:30px;&quot;&gt;
+                For faster assistance, please include your order or invoice number, generator model, serial number, and a clear description of your request. You may also attach relevant photos or documents through the form when available.
+              &lt;/p&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:18px 32px 36px; font-family:Georgia, &apos;Times New Roman&apos;, serif; font-size:21px; line-height:32px; font-weight:500; color:#003199; text-align:left; border-top:1px solid #e9e9ea;&quot;&gt;
+              Thank you for trusting Power Motors to keep your home, business, and operations powered.
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/table&gt;
+
+        &lt;!-- Contact footer --&gt;
+        &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;650&quot; class=&quot;email-container&quot; style=&quot;width:100%; max-width:650px; background-color:#e9e9ea;&quot;&gt;
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:22px 32px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:22px; color:#0a2058;&quot;&gt;
+              &lt;p style=&quot;margin:0 0 10px; font-family:Georgia, &apos;Times New Roman&apos;, serif; font-size:17px; font-weight:bold;&quot;&gt;
+                Sales, Parts &amp;amp; Technical Support
+              &lt;/p&gt;
+              &lt;strong&gt;E:&lt;/strong&gt;
+              &lt;a href=&quot;mailto:support@powermotors.com&quot; style=&quot;color:#003199; text-decoration:none;&quot;&gt;support@powermotors.com&lt;/a&gt;&lt;br&gt;
+              &lt;strong&gt;T:&lt;/strong&gt;
+              &lt;a href=&quot;tel:03333666&quot; style=&quot;color:#003199; text-decoration:none;&quot;&gt;03-333666&lt;/a&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/table&gt;
+
+        &lt;!-- Legal footer --&gt;
+        &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;650&quot; class=&quot;email-container&quot; style=&quot;width:100%; max-width:650px; background-color:#080c16;&quot;&gt;
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:24px 32px 8px;&quot;&gt;
+              &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;100%&quot;&gt;
+                &lt;tr&gt;
+                  &lt;td class=&quot;footer-column&quot; align=&quot;left&quot; style=&quot;font-family:Georgia, &apos;Times New Roman&apos;, serif; font-size:23px; line-height:30px; font-weight:400; color:#e9e9ea;&quot;&gt;
+                    Reliable Power. Genuine Support.
+                  &lt;/td&gt;
+                  &lt;td class=&quot;footer-column footer-column-right&quot; align=&quot;right&quot; style=&quot;font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:22px; color:#ffffff;&quot;&gt;
+                    &lt;a href=&quot;https://powermotors.com&quot; style=&quot;color:#0593f5; text-decoration:none;&quot;&gt;powermotors.com&lt;/a&gt;
+                  &lt;/td&gt;
+                &lt;/tr&gt;
+              &lt;/table&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+
+          &lt;tr&gt;
+            &lt;td class=&quot;mobile-padding&quot; style=&quot;padding:8px 32px 24px; font-family:Arial, Helvetica, sans-serif; font-size:11px; line-height:16px; color:#a4b3cd; text-align:left;&quot;&gt;
+              Power Motors supplies generators, generator components, spare parts, and related support services. Product specifications, availability, delivery times, installation requirements, and warranty coverage may vary according to the manufacturer, product, and order. Please refer to your quotation, invoice, product documentation, and applicable manufacturer warranty for complete details. Information in this email is provided for general customer-support purposes and may not replace an inspection or assessment by a qualified technician.
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/table&gt;
+
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/body&gt;
+&lt;/html&gt;</text>
+    </textTemplates>
+    <variables>
+        <name>AccountName</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <name>Recipients_Email</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+</Flow>

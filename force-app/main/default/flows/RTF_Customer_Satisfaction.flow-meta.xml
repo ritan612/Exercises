@@ -266,10 +266,10 @@
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Draft</status>
     <textTemplates>
         <name>EmailBody</name>
-        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
         <text>&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot;&gt;
 &lt;head&gt;
@@ -359,12 +359,7 @@
         &lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; role=&quot;presentation&quot; width=&quot;650&quot; class=&quot;email-container&quot; style=&quot;width:100%; max-width:650px;&quot;&gt;
           &lt;tr&gt;
             &lt;td align=&quot;center&quot; style=&quot;background-color:#080c16;&quot;&gt;
-              &lt;img
-                alt=&quot;Power Motors&quot;
-                src=&quot;https://orgfarm-0793b2f04e-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;amp;versionId=068g5000004Zcsv&amp;amp;operationContext=DELIVERY&amp;amp;contentId=05Tg500000DSRCJ&amp;amp;page=0&amp;amp;d=/a/g50000003uTt/3coJYrBegp2ClpSTUfnULTKAwJ2ZGL7u0qVzPgeL4f8&amp;amp;oid=00Dg500000E9Rlh&amp;amp;dpt=null&amp;amp;viewId=&quot;
-                width=&quot;650&quot;
-                style=&quot;display:block; width:100%; max-width:650px; height:auto; border:0; outline:none; text-decoration:none;&quot;
-              &gt;
+              &lt;img alt=&quot;Power Motors&quot; src=&quot;https://orgfarm-0793b2f04e-dev-ed.develop.my.salesforce.com/sfc/dist/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068g5000004d6o1&amp;operationContext=DELIVERY&amp;contentId=05Tg500000De9YR&amp;page=0&amp;d=/a/g500000040cX/4yCA9mqjXeLiR6GmjaBPcs8JPLX6aOUC3AREaomODao&amp;oid=00Dg500000E9Rlh&amp;dpt=null&amp;viewId=&quot; width=&quot;650&quot; style=&quot;display:block; width:100%; max-width:650px; height:auto; border:0; outline:none; text-decoration:none;&quot;/&gt;
             &lt;/td&gt;
           &lt;/tr&gt;
         &lt;/table&gt;

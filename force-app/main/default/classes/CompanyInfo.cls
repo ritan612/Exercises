@@ -102,7 +102,7 @@ public with sharing class CompanyInfo {
             }
             
             Map<Id, Lead> leadRecordsMap = new Map<Id, Lead>([
-            SELECT Id, Website, NumberOfEmployees , Foundation_date__c, Address , Company_Biography__c, Company_Logo__c
+            SELECT Id, Website, NumberOfEmployees , Foundation_date__c, Address ,Description, Company_Logo__c
             FROM Lead 
             WHERE Id IN :currentIds
             ]);
@@ -127,7 +127,7 @@ public with sharing class CompanyInfo {
                             }
                             
                             if (firstRecord.get('Description') != null) {
-                                myLead.Company_Biography__c = String.valueOf(firstRecord.get('Description'));
+                                myLead.Description = String.valueOf(firstRecord.get('Description'));
                             }
                             
                             if (firstRecord.get('logoUrl__c') != null) {

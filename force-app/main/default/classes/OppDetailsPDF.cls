@@ -4,7 +4,7 @@ public with sharing class OppDetailsPDF {
         Set<Id> qualifiedOppIds = new Set<Id>();
         for(Opportunity opp : newList){
             Opportunity oldOpp = (oldMap != null) ? oldMap.get(opp.Id) : null;
-            if(opp.StageName == 'Closed Won' &&  oldOpp.StageName != 'Closed Won'){
+            if((opp.StageName == 'Closed Won' &&  oldOpp.StageName != 'Closed Won')||(opp.StageName == 'Closed Lost' &&  oldOpp.StageName != 'Closed Lost')){
                 qualifiedOppIds.add(opp.Id);
             }
         }
